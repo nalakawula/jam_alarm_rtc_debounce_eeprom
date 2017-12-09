@@ -203,8 +203,13 @@ void loop()
   if (menu == 0)
   {
     DisplayWaktu();
-    Alarm(); // Alarm control
+    float suhu = RTC.getTemp();//( ( RTC.getTemp() * ( 9/5 )) + 32 );
+    lcd.setCursor(11, 1);lcd.print(suhu);
+    lcd.setCursor(10, 1);
+    lcd.write(0);
 
+    Alarm(); // Alarm control
+    
   }
   
   if (menu == 1)
@@ -578,10 +583,7 @@ void printAlarmOn() {
 void printAlarmOff() {
  
   lcd.setCursor(0, 1);
-  float suhu = RTC.getTemp();//( ( RTC.getTemp() * ( 9/5 )) + 32 );
-  lcd.setCursor(11, 1);lcd.print(suhu);
-   lcd.setCursor(10, 1);
-  lcd.write(0);
+ 
 }
 
 void Alarm() {
