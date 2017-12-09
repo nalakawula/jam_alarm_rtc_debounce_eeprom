@@ -6,7 +6,7 @@
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Display  I2C 20 x 4
-DS1307 RTC;
+DS3231 RTC;
 
 RBD::Button bawah(12);
 RBD::Button kanan(11);
@@ -23,23 +23,28 @@ int tahun;
 int bulan;
 int tanggal;
 int menu = 0;
-int setAlarm = 0;
+int toggleAlarm = 0;
+
+//float temp;
 
 uint8_t jamAlarm ;
 uint8_t menitAlarm;
 int alamatJam = 0;
 int alamatMenit = 1;
 
-// jam pasir
-byte jam_pasir[] = {
-  B11111,
-  B10001,
-  B01010,
-  B00100,
-  B01010,
-  B10001,
-  B11111,
-  B11111
+// termo
+
+byte termo[] = {
+
+  0x04,
+  0x0A,
+  0x0E,
+  0x0E,
+  0x0E,
+  0x1F,
+  0x1F,
+  0x0E
+
 };
 
 // bel
@@ -135,13 +140,14 @@ byte p5[8] = {
 };
 
 
+
 void setup()
 {
 
   lcd.init();
   lcd.backlight();
 
-  lcd.createChar(0, jam_pasir);
+  lcd.createChar(0, termo);
   lcd.createChar(1, bel);
   lcd.createChar(2, panah_ki);
   lcd.createChar(3, panah_ka);
@@ -239,7 +245,7 @@ void loop()
 void DisplayWaktu ()
 {
   DateTime now = RTC.now();
-
+  
   // HARI
   char DOW[][10] = {"Ming", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"};
   lcd.setCursor(0, 0);
@@ -291,7 +297,7 @@ void DisplayWaktu ()
     lcd.print("0");
   }
   lcd.print(now.second(), DEC);
-
+  
 }
 
 void DisplaySetJam()
@@ -550,7 +556,7 @@ void DisplayAkhirAlarm()
 }
 
 void printAlarmOn() {
-  lcd.setCursor(9, 1);
+  lcd.setCursor(11, 1);
 
   if (jamAlarm <= 9)
   {
@@ -565,29 +571,33 @@ void printAlarmOn() {
   }
   lcd.print(menitAlarm, DEC);
 
-  lcd.setCursor(15, 1);
-  lcd.write(1);
+  lcd.setCursor(10,1); lcd.write(1);
 
 }
 
 void printAlarmOff() {
+ 
   lcd.setCursor(0, 1);
+  float suhu = RTC.getTemp();//( ( RTC.getTemp() * ( 9/5 )) + 32 );
+  lcd.setCursor(11, 1);lcd.print(suhu);
+   lcd.setCursor(10, 1);
+  lcd.write(0);
 }
 
 void Alarm() {
   if (bawah.onPressed())
   {
-    setAlarm = setAlarm + 1;
+    toggleAlarm = toggleAlarm + 1;
     lcd.clear();
   }
-  if (setAlarm == 0)
+  if (toggleAlarm == 0)
   {
     printAlarmOff();
     DisplayWaktu();
-    noTone (buzzer);
-    digitalWrite(LED, LOW);
+    //noTone (buzzer);
+    digitalWrite(LED, LOW);    
   }
-  if (setAlarm == 1)
+  if (toggleAlarm == 1)
   {
 
     printAlarmOn();
@@ -598,20 +608,20 @@ void Alarm() {
       lcd.noBacklight();
       DateTime now = RTC.now();
       digitalWrite(LED, HIGH);
-      tone(buzzer, 880); //play the note "A5" (LA5)
+      //tone(buzzer, 880); //play the note "A5" (LA5)
       delay (300);
-      tone(buzzer, 698); //play the note "F6" (FA5)
+      //tone(buzzer, 698); //play the note "F6" (FA5)
       lcd.backlight();
     }
     else {
-      noTone (buzzer);
+      //noTone (buzzer);
       digitalWrite(LED, LOW);
     }
 
   }
-  if (setAlarm == 2)
+  if (toggleAlarm == 2)
   {
-    setAlarm = 0;
+    toggleAlarm = 0;
   }
   delay(200);
 }
